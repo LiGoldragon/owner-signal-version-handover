@@ -1,9 +1,10 @@
 //! Owner-only signal contract for version-handover authority.
 //!
 //! The ordinary `signal-version-handover` contract carries the private
-//! daemon-to-daemon handover protocol. This owner contract carries emergency
-//! and administrative authority for the persona engine: force an active
-//! selector flip, roll back a recent flip, or quarantine a component version.
+//! daemon-to-daemon handover protocol. This owner contract carries
+//! administrative authority for the persona engine: attempt an ordinary
+//! handover, force an active selector flip, roll back a recent flip, or
+//! quarantine a component version.
 
 use nota_codec::{NotaEnum, NotaRecord};
 use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
@@ -30,6 +31,19 @@ pub struct Version {
 )]
 pub struct VersionLabel(String);
 
+#[derive(
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    nota_codec::NotaTransparent,
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+)]
+pub struct SocketPath(String);
+
 impl Version {
     pub fn new(label: VersionLabel, contract_version: ContractVersion) -> Self {
         Self {
@@ -40,6 +54,16 @@ impl Version {
 }
 
 impl VersionLabel {
+    pub fn new(value: impl Into<String>) -> Self {
+        Self(value.into())
+    }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+impl SocketPath {
     pub fn new(value: impl Into<String>) -> Self {
         Self(value.into())
     }
@@ -100,6 +124,20 @@ pub struct Quarantine {
 }
 
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+pub struct VersionEndpoint {
+    pub version: Version,
+    pub owner_socket_path: SocketPath,
+    pub upgrade_socket_path: SocketPath,
+}
+
+#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+pub struct AttemptHandover {
+    pub component: ComponentName,
+    pub current: VersionEndpoint,
+    pub next: VersionEndpoint,
+}
+
+#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
 pub struct ForcedFlip {
     pub component: ComponentName,
     pub active_version: Version,
@@ -117,6 +155,13 @@ pub struct Quarantined {
     pub version: Version,
 }
 
+#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+pub struct HandoverSucceeded {
+    pub component: ComponentName,
+    pub active_version: Version,
+    pub commit_sequence: u64,
+}
+
 #[derive(
     Archive, RkyvSerialize, RkyvDeserialize, NotaEnum, Debug, Clone, Copy, PartialEq, Eq, Hash,
 )]
@@ -126,6 +171,9 @@ pub enum RejectionReason {
     NotAllowed,
     AlreadyQuarantined,
     NotQuarantined,
+    VersionQuarantined,
+    HandoverRejected,
+    UpgradeSocketUnavailable,
 }
 
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
@@ -149,11 +197,13 @@ pub struct RequestUnimplemented {
 
 signal_channel! {
     channel OwnerVersionHandover {
+        operation AttemptHandover(AttemptHandover),
         operation ForceFlip(ForceFlip),
         operation Rollback(Rollback),
         operation Quarantine(Quarantine),
     }
     reply Reply {
+        HandoverSucceeded(HandoverSucceeded),
         FlipForced(ForcedFlip),
         RolledBack(RolledBack),
         Quarantined(Quarantined),

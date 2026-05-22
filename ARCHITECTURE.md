@@ -1,8 +1,8 @@
 # owner-signal-version-handover Architecture
 
 This contract is the owner-only authority surface for component version
-handover. It does not run a handover, bind sockets, migrate databases, or
-select active versions. Persona consumes this contract on its owner surface and
+handover. It does not bind sockets, migrate databases, or select active
+versions itself. Persona consumes this contract on its owner surface and
 translates accepted authority orders into runtime behavior.
 
 ## Boundary
@@ -15,6 +15,10 @@ translates accepted authority orders into runtime behavior.
 
 ## Operations
 
+- `AttemptHandover` asks Persona to drive the ordinary private handover
+  protocol for one component version pair. The request carries the versioned
+  ordinary owner and private upgrade socket paths because the contract is still
+  in the prototype phase before Persona has a full component-version catalog.
 - `ForceFlip` asks Persona to flip a component's active selector from the
   current version to a target version even when the ordinary marker protocol
   would not choose that path automatically.
@@ -26,9 +30,12 @@ translates accepted authority orders into runtime behavior.
 ## Constraints
 
 - This is a pure signal contract crate: no daemon, no store, no socket policy.
-- Every operation names a component and one or two `ContractVersion` values,
-  using the same version identity type as `version-projection` and
+- Every operation names a component and version identity values, using the
+  same `ContractVersion` type as `version-projection` and
   `signal-version-handover`.
+- `AttemptHandover` is the only normal-path operation. `ForceFlip`,
+  `Rollback`, and `Quarantine` are owner overrides and must not forge a
+  marker-backed handover fact.
 - Runtime safety decisions remain in Persona. This crate only supplies typed
   owner vocabulary and typed replies.
 - The prototype keeps Tap/Untap observability out of scope until a consuming

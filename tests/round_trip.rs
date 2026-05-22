@@ -1,8 +1,9 @@
 use nota_codec::{Decoder, Encoder, NotaDecode, NotaEncode};
 use owner_signal_version_handover::{
-    ForceFlip, ForceReason, ForcedFlip, Frame, FrameBody, Operation, OperationKind, Quarantine,
-    QuarantineReason, Quarantined, Rejected, RejectionReason, Reply, Rollback, RollbackReason,
-    RolledBack, Version, VersionLabel,
+    AttemptHandover, ForceFlip, ForceReason, ForcedFlip, Frame, FrameBody, HandoverSucceeded,
+    Operation, OperationKind, Quarantine, QuarantineReason, Quarantined, Rejected, RejectionReason,
+    Reply, Rollback, RollbackReason, RolledBack, SocketPath, Version, VersionEndpoint,
+    VersionLabel,
 };
 use signal_frame::{
     ExchangeIdentifier, ExchangeLane, LaneSequence, NonEmpty, Reply as FrameReply, RequestPayload,
@@ -30,6 +31,23 @@ fn version(byte: u8) -> ContractVersion {
 
 fn component_version(label: &str, byte: u8) -> Version {
     Version::new(VersionLabel::new(label), version(byte))
+}
+
+fn version_endpoint(label: &str, byte: u8) -> VersionEndpoint {
+    let directory = format!("/run/persona/default/spirit/{label}");
+    VersionEndpoint {
+        version: component_version(label, byte),
+        owner_socket_path: SocketPath::new(format!("{directory}/owner.sock")),
+        upgrade_socket_path: SocketPath::new(format!("{directory}/upgrade.sock")),
+    }
+}
+
+fn attempt_handover() -> AttemptHandover {
+    AttemptHandover {
+        component: component(),
+        current: version_endpoint("v0.1.0", 1),
+        next: version_endpoint("v0.1.1", 2),
+    }
 }
 
 fn force_flip() -> ForceFlip {
@@ -111,6 +129,7 @@ where
 #[test]
 fn owner_requests_round_trip_through_signal_frames() {
     let operations = [
+        Operation::AttemptHandover(attempt_handover()),
         Operation::ForceFlip(force_flip()),
         Operation::Rollback(rollback()),
         Operation::Quarantine(quarantine()),
@@ -124,6 +143,11 @@ fn owner_requests_round_trip_through_signal_frames() {
 #[test]
 fn owner_replies_round_trip_through_signal_frames() {
     let replies = [
+        Reply::HandoverSucceeded(HandoverSucceeded {
+            component: component(),
+            active_version: component_version("v0.1.1", 2),
+            commit_sequence: 118,
+        }),
         Reply::FlipForced(ForcedFlip {
             component: component(),
             active_version: component_version("v0.1.1", 2),
@@ -150,6 +174,10 @@ fn owner_replies_round_trip_through_signal_frames() {
 #[test]
 fn operation_kinds_are_generated_from_authority_operations() {
     assert_eq!(
+        Operation::AttemptHandover(attempt_handover()).kind(),
+        OperationKind::AttemptHandover
+    );
+    assert_eq!(
         Operation::ForceFlip(force_flip()).kind(),
         OperationKind::ForceFlip
     );
@@ -166,6 +194,10 @@ fn operation_kinds_are_generated_from_authority_operations() {
 #[test]
 fn canonical_nota_examples_round_trip() {
     round_trip_nota(
+        Operation::AttemptHandover(attempt_handover()),
+        r#"(AttemptHandover (persona-spirit (("v0.1.0" #0101010101010101010101010101010101010101010101010101010101010101) "/run/persona/default/spirit/v0.1.0/owner.sock" "/run/persona/default/spirit/v0.1.0/upgrade.sock") (("v0.1.1" #0202020202020202020202020202020202020202020202020202020202020202) "/run/persona/default/spirit/v0.1.1/owner.sock" "/run/persona/default/spirit/v0.1.1/upgrade.sock")))"#,
+    );
+    round_trip_nota(
         Operation::ForceFlip(force_flip()),
         r#"(ForceFlip (persona-spirit ("v0.1.0" #0101010101010101010101010101010101010101010101010101010101010101) ("v0.1.1" #0202020202020202020202020202020202020202020202020202020202020202) OperatorOverride))"#,
     );
@@ -176,6 +208,14 @@ fn canonical_nota_examples_round_trip() {
     round_trip_nota(
         Operation::Quarantine(quarantine()),
         r#"(Quarantine (persona-spirit ("v0.1.1" #0202020202020202020202020202020202020202020202020202020202020202) FailedUpgrade))"#,
+    );
+    round_trip_nota(
+        Reply::HandoverSucceeded(HandoverSucceeded {
+            component: component(),
+            active_version: component_version("v0.1.1", 2),
+            commit_sequence: 118,
+        }),
+        r#"(HandoverSucceeded (persona-spirit ("v0.1.1" #0202020202020202020202020202020202020202020202020202020202020202) 118))"#,
     );
     round_trip_nota(
         Reply::FlipForced(ForcedFlip {
