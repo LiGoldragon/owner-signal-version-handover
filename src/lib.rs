@@ -11,6 +11,44 @@ use signal_frame::signal_channel;
 use signal_sema::SemaObservation;
 use version_projection::{ComponentName, ContractVersion};
 
+#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+pub struct Version {
+    pub label: VersionLabel,
+    pub contract_version: ContractVersion,
+}
+
+#[derive(
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    nota_codec::NotaTransparent,
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+)]
+pub struct VersionLabel(String);
+
+impl Version {
+    pub fn new(label: VersionLabel, contract_version: ContractVersion) -> Self {
+        Self {
+            label,
+            contract_version,
+        }
+    }
+}
+
+impl VersionLabel {
+    pub fn new(value: impl Into<String>) -> Self {
+        Self(value.into())
+    }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
 #[derive(
     Archive, RkyvSerialize, RkyvDeserialize, NotaEnum, Debug, Clone, Copy, PartialEq, Eq, Hash,
 )]
@@ -41,42 +79,42 @@ pub enum QuarantineReason {
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
 pub struct ForceFlip {
     pub component: ComponentName,
-    pub current_version: ContractVersion,
-    pub target_version: ContractVersion,
+    pub current_version: Version,
+    pub target_version: Version,
     pub reason: ForceReason,
 }
 
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
 pub struct Rollback {
     pub component: ComponentName,
-    pub active_version: ContractVersion,
-    pub restore_version: ContractVersion,
+    pub active_version: Version,
+    pub restore_version: Version,
     pub reason: RollbackReason,
 }
 
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
 pub struct Quarantine {
     pub component: ComponentName,
-    pub version: ContractVersion,
+    pub version: Version,
     pub reason: QuarantineReason,
 }
 
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
 pub struct ForcedFlip {
     pub component: ComponentName,
-    pub active_version: ContractVersion,
+    pub active_version: Version,
 }
 
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
 pub struct RolledBack {
     pub component: ComponentName,
-    pub active_version: ContractVersion,
+    pub active_version: Version,
 }
 
 #[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
 pub struct Quarantined {
     pub component: ComponentName,
-    pub version: ContractVersion,
+    pub version: Version,
 }
 
 #[derive(

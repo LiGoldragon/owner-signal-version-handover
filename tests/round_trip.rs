@@ -2,7 +2,7 @@ use nota_codec::{Decoder, Encoder, NotaDecode, NotaEncode};
 use owner_signal_version_handover::{
     ForceFlip, ForceReason, ForcedFlip, Frame, FrameBody, Operation, OperationKind, Quarantine,
     QuarantineReason, Quarantined, Rejected, RejectionReason, Reply, Rollback, RollbackReason,
-    RolledBack,
+    RolledBack, Version, VersionLabel,
 };
 use signal_frame::{
     ExchangeIdentifier, ExchangeLane, LaneSequence, NonEmpty, Reply as FrameReply, RequestPayload,
@@ -28,11 +28,15 @@ fn version(byte: u8) -> ContractVersion {
     ContractVersion::new([byte; 32])
 }
 
+fn component_version(label: &str, byte: u8) -> Version {
+    Version::new(VersionLabel::new(label), version(byte))
+}
+
 fn force_flip() -> ForceFlip {
     ForceFlip {
         component: component(),
-        current_version: version(1),
-        target_version: version(2),
+        current_version: component_version("v0.1.0", 1),
+        target_version: component_version("v0.1.1", 2),
         reason: ForceReason::OperatorOverride,
     }
 }
@@ -40,8 +44,8 @@ fn force_flip() -> ForceFlip {
 fn rollback() -> Rollback {
     Rollback {
         component: component(),
-        active_version: version(2),
-        restore_version: version(1),
+        active_version: component_version("v0.1.1", 2),
+        restore_version: component_version("v0.1.0", 1),
         reason: RollbackReason::PostCutoverFailure,
     }
 }
@@ -49,7 +53,7 @@ fn rollback() -> Rollback {
 fn quarantine() -> Quarantine {
     Quarantine {
         component: component(),
-        version: version(2),
+        version: component_version("v0.1.1", 2),
         reason: QuarantineReason::FailedUpgrade,
     }
 }
@@ -122,15 +126,15 @@ fn owner_replies_round_trip_through_signal_frames() {
     let replies = [
         Reply::FlipForced(ForcedFlip {
             component: component(),
-            active_version: version(2),
+            active_version: component_version("v0.1.1", 2),
         }),
         Reply::RolledBack(RolledBack {
             component: component(),
-            active_version: version(1),
+            active_version: component_version("v0.1.0", 1),
         }),
         Reply::Quarantined(Quarantined {
             component: component(),
-            version: version(2),
+            version: component_version("v0.1.1", 2),
         }),
         Reply::Rejected(Rejected {
             component: component(),
@@ -163,36 +167,36 @@ fn operation_kinds_are_generated_from_authority_operations() {
 fn canonical_nota_examples_round_trip() {
     round_trip_nota(
         Operation::ForceFlip(force_flip()),
-        "(ForceFlip (persona-spirit #0101010101010101010101010101010101010101010101010101010101010101 #0202020202020202020202020202020202020202020202020202020202020202 OperatorOverride))",
+        r#"(ForceFlip (persona-spirit ("v0.1.0" #0101010101010101010101010101010101010101010101010101010101010101) ("v0.1.1" #0202020202020202020202020202020202020202020202020202020202020202) OperatorOverride))"#,
     );
     round_trip_nota(
         Operation::Rollback(rollback()),
-        "(Rollback (persona-spirit #0202020202020202020202020202020202020202020202020202020202020202 #0101010101010101010101010101010101010101010101010101010101010101 PostCutoverFailure))",
+        r#"(Rollback (persona-spirit ("v0.1.1" #0202020202020202020202020202020202020202020202020202020202020202) ("v0.1.0" #0101010101010101010101010101010101010101010101010101010101010101) PostCutoverFailure))"#,
     );
     round_trip_nota(
         Operation::Quarantine(quarantine()),
-        "(Quarantine (persona-spirit #0202020202020202020202020202020202020202020202020202020202020202 FailedUpgrade))",
+        r#"(Quarantine (persona-spirit ("v0.1.1" #0202020202020202020202020202020202020202020202020202020202020202) FailedUpgrade))"#,
     );
     round_trip_nota(
         Reply::FlipForced(ForcedFlip {
             component: component(),
-            active_version: version(2),
+            active_version: component_version("v0.1.1", 2),
         }),
-        "(FlipForced (persona-spirit #0202020202020202020202020202020202020202020202020202020202020202))",
+        r#"(FlipForced (persona-spirit ("v0.1.1" #0202020202020202020202020202020202020202020202020202020202020202)))"#,
     );
     round_trip_nota(
         Reply::RolledBack(RolledBack {
             component: component(),
-            active_version: version(1),
+            active_version: component_version("v0.1.0", 1),
         }),
-        "(RolledBack (persona-spirit #0101010101010101010101010101010101010101010101010101010101010101))",
+        r#"(RolledBack (persona-spirit ("v0.1.0" #0101010101010101010101010101010101010101010101010101010101010101)))"#,
     );
     round_trip_nota(
         Reply::Quarantined(Quarantined {
             component: component(),
-            version: version(2),
+            version: component_version("v0.1.1", 2),
         }),
-        "(Quarantined (persona-spirit #0202020202020202020202020202020202020202020202020202020202020202))",
+        r#"(Quarantined (persona-spirit ("v0.1.1" #0202020202020202020202020202020202020202020202020202020202020202)))"#,
     );
     round_trip_nota(
         Reply::Rejected(Rejected {
