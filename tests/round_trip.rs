@@ -195,19 +195,19 @@ fn operation_kinds_are_generated_from_authority_operations() {
 fn canonical_nota_examples_round_trip() {
     round_trip_nota(
         Operation::AttemptHandover(attempt_handover()),
-        r#"(AttemptHandover (persona-spirit (("v0.1.0" #0101010101010101010101010101010101010101010101010101010101010101) "/run/persona/default/spirit/v0.1.0/owner.sock" "/run/persona/default/spirit/v0.1.0/upgrade.sock") (("v0.1.1" #0202020202020202020202020202020202020202020202020202020202020202) "/run/persona/default/spirit/v0.1.1/owner.sock" "/run/persona/default/spirit/v0.1.1/upgrade.sock")))"#,
+        "(AttemptHandover (persona-spirit (([v0.1.0] #0101010101010101010101010101010101010101010101010101010101010101) [/run/persona/default/spirit/v0.1.0/owner.sock] [/run/persona/default/spirit/v0.1.0/upgrade.sock]) (([v0.1.1] #0202020202020202020202020202020202020202020202020202020202020202) [/run/persona/default/spirit/v0.1.1/owner.sock] [/run/persona/default/spirit/v0.1.1/upgrade.sock])))",
     );
     round_trip_nota(
         Operation::ForceFlip(force_flip()),
-        r#"(ForceFlip (persona-spirit ("v0.1.0" #0101010101010101010101010101010101010101010101010101010101010101) ("v0.1.1" #0202020202020202020202020202020202020202020202020202020202020202) OperatorOverride))"#,
+        "(ForceFlip (persona-spirit ([v0.1.0] #0101010101010101010101010101010101010101010101010101010101010101) ([v0.1.1] #0202020202020202020202020202020202020202020202020202020202020202) OperatorOverride))",
     );
     round_trip_nota(
         Operation::Rollback(rollback()),
-        r#"(Rollback (persona-spirit ("v0.1.1" #0202020202020202020202020202020202020202020202020202020202020202) ("v0.1.0" #0101010101010101010101010101010101010101010101010101010101010101) PostCutoverFailure))"#,
+        "(Rollback (persona-spirit ([v0.1.1] #0202020202020202020202020202020202020202020202020202020202020202) ([v0.1.0] #0101010101010101010101010101010101010101010101010101010101010101) PostCutoverFailure))",
     );
     round_trip_nota(
         Operation::Quarantine(quarantine()),
-        r#"(Quarantine (persona-spirit ("v0.1.1" #0202020202020202020202020202020202020202020202020202020202020202) FailedUpgrade))"#,
+        "(Quarantine (persona-spirit ([v0.1.1] #0202020202020202020202020202020202020202020202020202020202020202) FailedUpgrade))",
     );
     round_trip_nota(
         Reply::HandoverSucceeded(HandoverSucceeded {
@@ -215,28 +215,28 @@ fn canonical_nota_examples_round_trip() {
             active_version: component_version("v0.1.1", 2),
             commit_sequence: 118,
         }),
-        r#"(HandoverSucceeded (persona-spirit ("v0.1.1" #0202020202020202020202020202020202020202020202020202020202020202) 118))"#,
+        "(HandoverSucceeded (persona-spirit ([v0.1.1] #0202020202020202020202020202020202020202020202020202020202020202) 118))",
     );
     round_trip_nota(
         Reply::FlipForced(ForcedFlip {
             component: component(),
             active_version: component_version("v0.1.1", 2),
         }),
-        r#"(FlipForced (persona-spirit ("v0.1.1" #0202020202020202020202020202020202020202020202020202020202020202)))"#,
+        "(FlipForced (persona-spirit ([v0.1.1] #0202020202020202020202020202020202020202020202020202020202020202)))",
     );
     round_trip_nota(
         Reply::RolledBack(RolledBack {
             component: component(),
             active_version: component_version("v0.1.0", 1),
         }),
-        r#"(RolledBack (persona-spirit ("v0.1.0" #0101010101010101010101010101010101010101010101010101010101010101)))"#,
+        "(RolledBack (persona-spirit ([v0.1.0] #0101010101010101010101010101010101010101010101010101010101010101)))",
     );
     round_trip_nota(
         Reply::Quarantined(Quarantined {
             component: component(),
             version: component_version("v0.1.1", 2),
         }),
-        r#"(Quarantined (persona-spirit ("v0.1.1" #0202020202020202020202020202020202020202020202020202020202020202)))"#,
+        "(Quarantined (persona-spirit ([v0.1.1] #0202020202020202020202020202020202020202020202020202020202020202)))",
     );
     round_trip_nota(
         Reply::Rejected(Rejected {
