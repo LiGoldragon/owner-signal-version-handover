@@ -1,0 +1,32 @@
+{}
+
+[]
+
+[
+  (Selector [ForceFlip Rollback])
+  (Quarantine [Target])
+]
+
+[]
+
+{
+  Selector [(ForceFlip ForceFlip) (Rollback Rollback)]
+  Quarantine [(Target Target)]
+  Ask (Text)
+  Report (Text)
+  Request (Text)
+  Payload (Text)
+  ForceFlip (Text)
+  Rollback (Text)
+  Target (Text)
+  Text (String)
+  Identifier (u64)
+  Name (String)
+  Path (String)
+  Status [Concept Active Retired]
+}
+
+[
+  (Version 0 1)
+  (Status Concept)
+]
