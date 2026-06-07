@@ -6,13 +6,15 @@
 //! handover, force an active selector flip, roll back a recent flip, or
 //! quarantine a component version.
 
-use nota_codec::{NotaEnum, NotaRecord};
+use nota_next::{NotaDecode, NotaEncode};
 use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
 use signal_frame::signal_channel;
 use signal_sema::SemaObservation;
 use version_projection::{ComponentName, ContractVersion};
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct Version {
     pub label: VersionLabel,
     pub contract_version: ContractVersion,
@@ -22,7 +24,8 @@ pub struct Version {
     Archive,
     RkyvSerialize,
     RkyvDeserialize,
-    nota_codec::NotaTransparent,
+    NotaEncode,
+    NotaDecode,
     Debug,
     Clone,
     PartialEq,
@@ -35,7 +38,8 @@ pub struct VersionLabel(String);
     Archive,
     RkyvSerialize,
     RkyvDeserialize,
-    nota_codec::NotaTransparent,
+    NotaEncode,
+    NotaDecode,
     Debug,
     Clone,
     PartialEq,
@@ -74,7 +78,17 @@ impl SocketPath {
 }
 
 #[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaEnum, Debug, Clone, Copy, PartialEq, Eq, Hash,
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    NotaEncode,
+    NotaDecode,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
 )]
 pub enum ForceReason {
     OperatorOverride,
@@ -83,7 +97,17 @@ pub enum ForceReason {
 }
 
 #[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaEnum, Debug, Clone, Copy, PartialEq, Eq, Hash,
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    NotaEncode,
+    NotaDecode,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
 )]
 pub enum RollbackReason {
     PostCutoverFailure,
@@ -92,7 +116,17 @@ pub enum RollbackReason {
 }
 
 #[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaEnum, Debug, Clone, Copy, PartialEq, Eq, Hash,
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    NotaEncode,
+    NotaDecode,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
 )]
 pub enum QuarantineReason {
     FailedUpgrade,
@@ -100,7 +134,9 @@ pub enum QuarantineReason {
     OperatorHold,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct ForceFlip {
     pub component: ComponentName,
     pub current_version: Version,
@@ -108,7 +144,9 @@ pub struct ForceFlip {
     pub reason: ForceReason,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct Rollback {
     pub component: ComponentName,
     pub active_version: Version,
@@ -116,46 +154,60 @@ pub struct Rollback {
     pub reason: RollbackReason,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct Quarantine {
     pub component: ComponentName,
     pub version: Version,
     pub reason: QuarantineReason,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct VersionEndpoint {
     pub version: Version,
     pub owner_socket_path: SocketPath,
     pub upgrade_socket_path: SocketPath,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct AttemptHandover {
     pub component: ComponentName,
     pub current: VersionEndpoint,
     pub next: VersionEndpoint,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct ForcedFlip {
     pub component: ComponentName,
     pub active_version: Version,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct RolledBack {
     pub component: ComponentName,
     pub active_version: Version,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct Quarantined {
     pub component: ComponentName,
     pub version: Version,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct HandoverSucceeded {
     pub component: ComponentName,
     pub active_version: Version,
@@ -163,7 +215,17 @@ pub struct HandoverSucceeded {
 }
 
 #[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaEnum, Debug, Clone, Copy, PartialEq, Eq, Hash,
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    NotaEncode,
+    NotaDecode,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
 )]
 pub enum RejectionReason {
     UnknownComponent,
@@ -176,21 +238,35 @@ pub enum RejectionReason {
     UpgradeSocketUnavailable,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct Rejected {
     pub component: ComponentName,
     pub reason: RejectionReason,
 }
 
 #[derive(
-    Archive, RkyvSerialize, RkyvDeserialize, NotaEnum, Debug, Clone, Copy, PartialEq, Eq, Hash,
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    NotaEncode,
+    NotaDecode,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
 )]
 pub enum UnimplementedReason {
     NotBuiltYet,
     IntegrationNotLanded,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct RequestUnimplemented {
     pub reason: UnimplementedReason,
 }
@@ -217,12 +293,16 @@ signal_channel! {
     }
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct OperationReceived {
     pub operation: OperationKind,
 }
 
-#[derive(Archive, RkyvSerialize, RkyvDeserialize, NotaRecord, Debug, Clone, PartialEq, Eq)]
+#[derive(
+    Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
+)]
 pub struct EffectEmitted {
     pub observation: SemaObservation,
 }
