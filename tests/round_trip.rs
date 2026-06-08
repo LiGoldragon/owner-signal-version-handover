@@ -1,10 +1,10 @@
-use nota_next::{NotaDecode, NotaEncode, NotaSource};
-use owner_signal_version_handover::{
-    AttemptHandover, ForceFlip, ForceReason, ForcedFlip, Frame, FrameBody, HandoverSucceeded,
-    Operation, OperationKind, Quarantine, QuarantineReason, Quarantined, Rejected, RejectionReason,
-    Reply, Rollback, RollbackReason, RolledBack, SocketPath, Version, VersionEndpoint,
-    VersionLabel,
+use meta_signal_version_handover::{
+    AttemptHandover, EffectEmitted, EffectOutcome, ForceFlip, ForceReason, ForcedFlip, Frame,
+    FrameBody, HandoverSucceeded, Operation, OperationKind, Quarantine, QuarantineReason,
+    Quarantined, Rejected, RejectionReason, Reply, Rollback, RollbackReason, RolledBack,
+    SocketPath, Version, VersionEndpoint, VersionLabel,
 };
+use nota_next::{NotaDecode, NotaEncode, NotaSource};
 use signal_frame::{
     ExchangeIdentifier, ExchangeLane, LaneSequence, NonEmpty, Reply as FrameReply, RequestPayload,
     SessionEpoch, SubReply,
@@ -37,7 +37,7 @@ fn version_endpoint(label: &str, byte: u8) -> VersionEndpoint {
     let directory = format!("/run/persona/default/spirit/{label}");
     VersionEndpoint {
         version: component_version(label, byte),
-        owner_socket_path: SocketPath::new(format!("{directory}/owner.sock")),
+        meta_socket_path: SocketPath::new(format!("{directory}/meta.sock")),
         upgrade_socket_path: SocketPath::new(format!("{directory}/upgrade.sock")),
     }
 }
@@ -124,7 +124,7 @@ where
 }
 
 #[test]
-fn owner_requests_round_trip_through_signal_frames() {
+fn meta_requests_round_trip_through_signal_frames() {
     let operations = [
         Operation::AttemptHandover(attempt_handover()),
         Operation::ForceFlip(force_flip()),
@@ -138,7 +138,7 @@ fn owner_requests_round_trip_through_signal_frames() {
 }
 
 #[test]
-fn owner_replies_round_trip_through_signal_frames() {
+fn meta_replies_round_trip_through_signal_frames() {
     let replies = [
         Reply::HandoverSucceeded(HandoverSucceeded {
             component: component(),
@@ -192,7 +192,7 @@ fn operation_kinds_are_generated_from_authority_operations() {
 fn canonical_nota_examples_round_trip() {
     round_trip_nota(
         Operation::AttemptHandover(attempt_handover()),
-        "(AttemptHandover (persona-spirit (([v0.1.0] #0101010101010101010101010101010101010101010101010101010101010101) [/run/persona/default/spirit/v0.1.0/owner.sock] [/run/persona/default/spirit/v0.1.0/upgrade.sock]) (([v0.1.1] #0202020202020202020202020202020202020202020202020202020202020202) [/run/persona/default/spirit/v0.1.1/owner.sock] [/run/persona/default/spirit/v0.1.1/upgrade.sock])))",
+        "(AttemptHandover (persona-spirit (([v0.1.0] #0101010101010101010101010101010101010101010101010101010101010101) [/run/persona/default/spirit/v0.1.0/meta.sock] [/run/persona/default/spirit/v0.1.0/upgrade.sock]) (([v0.1.1] #0202020202020202020202020202020202020202020202020202020202020202) [/run/persona/default/spirit/v0.1.1/meta.sock] [/run/persona/default/spirit/v0.1.1/upgrade.sock])))",
     );
     round_trip_nota(
         Operation::ForceFlip(force_flip()),
@@ -241,5 +241,12 @@ fn canonical_nota_examples_round_trip() {
             reason: RejectionReason::AlreadyQuarantined,
         }),
         "(Rejected (persona-spirit AlreadyQuarantined))",
+    );
+    round_trip_nota(
+        EffectEmitted {
+            operation: OperationKind::AttemptHandover,
+            outcome: EffectOutcome::HandoverSucceeded,
+        },
+        "(AttemptHandover HandoverSucceeded)",
     );
 }

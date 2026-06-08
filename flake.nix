@@ -1,5 +1,5 @@
 {
-  description = "owner-signal-version-handover - owner-only version handover authority signal contract";
+  description = "meta-signal-version-handover - meta version handover authority signal contract";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -58,7 +58,7 @@
           });
         };
         devShells.default = pkgs.mkShell {
-          name = "owner-signal-version-handover";
+          name = "meta-signal-version-handover";
           packages = [ pkgs.jujutsu pkgs.pkg-config toolchain ];
         };
       });

@@ -1,7 +1,7 @@
-//! Owner-only signal contract for version-handover authority.
+//! Meta signal contract for version-handover authority.
 //!
 //! The ordinary `signal-version-handover` contract carries the private
-//! daemon-to-daemon handover protocol. This owner contract carries
+//! daemon-to-daemon handover protocol. This meta contract carries
 //! administrative authority for the persona engine: attempt an ordinary
 //! handover, force an active selector flip, roll back a recent flip, or
 //! quarantine a component version.
@@ -9,7 +9,6 @@
 use nota_next::{NotaDecode, NotaEncode};
 use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
 use signal_frame::signal_channel;
-use signal_sema::SemaObservation;
 use version_projection::{ComponentName, ContractVersion};
 
 #[derive(
@@ -168,7 +167,7 @@ pub struct Quarantine {
 )]
 pub struct VersionEndpoint {
     pub version: Version,
-    pub owner_socket_path: SocketPath,
+    pub meta_socket_path: SocketPath,
     pub upgrade_socket_path: SocketPath,
 }
 
@@ -272,7 +271,7 @@ pub struct RequestUnimplemented {
 }
 
 signal_channel! {
-    channel OwnerVersionHandover {
+    channel MetaVersionHandover {
         operation AttemptHandover(AttemptHandover),
         operation ForceFlip(ForceFlip),
         operation Rollback(Rollback),
@@ -301,8 +300,31 @@ pub struct OperationReceived {
 }
 
 #[derive(
+    Archive,
+    RkyvSerialize,
+    RkyvDeserialize,
+    NotaEncode,
+    NotaDecode,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+)]
+pub enum EffectOutcome {
+    HandoverSucceeded,
+    FlipForced,
+    RolledBack,
+    Quarantined,
+    Rejected,
+    NoChange,
+}
+
+#[derive(
     Archive, RkyvSerialize, RkyvDeserialize, NotaEncode, NotaDecode, Debug, Clone, PartialEq, Eq,
 )]
 pub struct EffectEmitted {
-    pub observation: SemaObservation,
+    pub operation: OperationKind,
+    pub outcome: EffectOutcome,
 }

@@ -1,15 +1,15 @@
-# owner-signal-version-handover Architecture
+# meta-signal-version-handover Architecture
 
-This contract is the owner-only authority surface for component version
+This contract is the meta authority surface for component version
 handover. It does not bind sockets, migrate databases, or select active
-versions itself. Persona consumes this contract on its owner surface and
+versions itself. Persona consumes this contract on its meta surface and
 translates accepted authority orders into runtime behavior.
 
 ## Boundary
 
 - `signal-version-handover` carries the ordinary private upgrade protocol
   between component versions.
-- `owner-signal-version-handover` carries administrative authority for the
+- `meta-signal-version-handover` carries administrative authority for the
   engine that drives that protocol.
 - `version-projection` carries cross-version type projection primitives.
 
@@ -17,7 +17,7 @@ translates accepted authority orders into runtime behavior.
 
 - `AttemptHandover` asks Persona to drive the ordinary private handover
   protocol for one component version pair. The request carries the versioned
-  ordinary owner and private upgrade socket paths because the contract is still
+  ordinary meta and private upgrade socket paths because the contract is still
   in the prototype phase before Persona has a full component-version catalog.
 - `ForceFlip` asks Persona to flip a component's active selector from the
   current version to a target version even when the ordinary marker protocol
@@ -25,7 +25,7 @@ translates accepted authority orders into runtime behavior.
 - `Rollback` asks Persona to restore a previous version as active after a
   recent handover.
 - `Quarantine` marks one component version as ineligible for handover
-  participation until owner policy changes.
+  participation until meta policy changes.
 
 ## Constraints
 
@@ -34,9 +34,9 @@ translates accepted authority orders into runtime behavior.
   same `ContractVersion` type as `version-projection` and
   `signal-version-handover`.
 - `AttemptHandover` is the only normal-path operation. `ForceFlip`,
-  `Rollback`, and `Quarantine` are owner overrides and must not forge a
+  `Rollback`, and `Quarantine` are meta overrides and must not forge a
   marker-backed handover fact.
 - Runtime safety decisions remain in Persona. This crate only supplies typed
-  owner vocabulary and typed replies.
+  meta vocabulary and typed replies.
 - The prototype keeps Tap/Untap observability out of scope until a consuming
   daemon needs it.

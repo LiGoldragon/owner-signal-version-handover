@@ -1,22 +1,25 @@
 [package]
-name         = "owner-signal-version-handover"
+name         = "meta-signal-version-handover"
 version      = "0.1.0"
 edition      = "2024"
 rust-version = "1.85"
 license      = "MIT OR Apache-2.0"
-repository   = "https://github.com/LiGoldragon/owner-signal-version-handover"
-description  = "Owner-only administrative signal contract for version handover."
+repository   = "https://github.com/LiGoldragon/meta-signal-version-handover"
+description  = "Meta administrative signal contract for version handover."
 publish      = false
 
 [lib]
-name = "owner_signal_version_handover"
+name = "meta_signal_version_handover"
 path = "src/lib.rs"
+
+[features]
+default = ["nota-text"]
+nota-text = ["signal-frame/nota-text", "version-projection/nota-text"]
 
 [dependencies]
 nota-next          = { git = "https://github.com/LiGoldragon/nota-next.git", branch = "main" }
 rkyv               = { version = "0.8", default-features = false, features = ["std", "bytecheck", "little_endian", "pointer_width_32", "unaligned"] }
 signal-frame       = { git = "https://github.com/LiGoldragon/signal-frame.git", branch = "main" }
-signal-sema        = { git = "https://github.com/LiGoldragon/signal-sema.git", branch = "main" }
 version-projection = { git = "https://github.com/LiGoldragon/version-projection.git", branch = "main" }
 thiserror          = "2"
 
