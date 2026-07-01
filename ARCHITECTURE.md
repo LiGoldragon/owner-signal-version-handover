@@ -5,6 +5,10 @@ handover. It does not bind sockets, migrate databases, or select active
 versions itself. Persona consumes this contract on its meta surface and
 translates accepted authority orders into runtime behavior.
 
+## 0.5 · Direction
+
+`meta-signal-version-handover` is the meta authority surface for component version handover. Persona consumes this contract on its meta surface and translates accepted authority orders into runtime behavior. `AttemptHandover` is the only normal-path operation; `ForceFlip`, `Rollback`, and `Quarantine` are meta overrides that must not forge a marker-backed handover fact. Runtime safety decisions remain in Persona — this crate supplies only typed meta vocabulary and typed replies.
+
 ## Boundary
 
 - `signal-version-handover` carries the ordinary private upgrade protocol
