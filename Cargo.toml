@@ -17,7 +17,7 @@ default = ["nota-text"]
 nota-text = ["signal-frame/nota-text", "version-projection/nota-text"]
 
 [dependencies]
-nota-next          = { git = "https://github.com/LiGoldragon/nota-next.git", branch = "main" }
+nota          = { git = "https://github.com/LiGoldragon/nota.git", branch = "main" }
 rkyv               = { version = "0.8", default-features = false, features = ["std", "bytecheck", "little_endian", "pointer_width_32", "unaligned"] }
 signal-frame       = { git = "https://github.com/LiGoldragon/signal-frame.git", branch = "main" }
 version-projection = { git = "https://github.com/LiGoldragon/version-projection.git", branch = "main" }
