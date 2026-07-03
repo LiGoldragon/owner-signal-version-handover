@@ -19,8 +19,8 @@ nota-text = ["signal-frame/nota-text", "version-projection/nota-text"]
 [dependencies]
 nota          = { git = "https://github.com/LiGoldragon/nota.git", branch = "main" }
 rkyv               = { version = "0.8", default-features = false, features = ["std", "bytecheck", "little_endian", "pointer_width_32", "unaligned"] }
-signal-frame       = { git = "https://github.com/LiGoldragon/signal-frame.git", branch = "main" }
-version-projection = { git = "https://github.com/LiGoldragon/version-projection.git", branch = "main" }
+signal-frame       = { git = "https://github.com/LiGoldragon/signal-frame.git", branch = "drop-next" }
+version-projection = { git = "https://github.com/LiGoldragon/version-projection.git", branch = "drop-next" }
 thiserror          = "2"
 
 [lints.rust]
